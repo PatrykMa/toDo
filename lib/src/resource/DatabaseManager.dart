@@ -7,7 +7,7 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 
-import 'Task.dart';
+import '../../Task.dart';
 
 class DatabaseManager{
 
@@ -27,7 +27,7 @@ class DatabaseManager{
   //Creating a database with name test.dn in your directory
   initDb() async {
     io.Directory documentsDirectory = await getApplicationDocumentsDirectory();
-    String path = join(documentsDirectory.path, "to_do.db");
+    String path = join(documentsDirectory.path, "1to_do.db");
     var theDb = await openDatabase(path, version: 1, onCreate: _onCreate);
     return theDb;
   }
@@ -36,12 +36,11 @@ class DatabaseManager{
   void _onCreate(Database db, int version) async {
     // When creating the db, create the table
     await db.execute(
-        "CREATE TABLE $_taskTableName("
-            "id INTEGER PRIMARY KEY,"
-            " placeId INTEGER,"
-            " name TEXT, "
-            "date INTEGER DEFAULT, "
-            "cyc INTEGER )");
+        "CREATE TABLE $_taskTableName ( id INTEGER PRIMARY KEY AUTOINCREMENT, placeId INTEGER, "
+            "name TEXT, "
+            "date INTEGER, "
+            "cyc INTEGER, "
+            "done BOOLEAN )");
     await db.execute(
         "CREATE TABLE $_placesTableName("
             "id INTEGER PRIMARY KEY,"
@@ -56,11 +55,12 @@ class DatabaseManager{
     List<Task> employees = new List();
     for (int i = 0; i < list.length; i++) {
       employees.add(
-          new Task(int.parse(list[i]["id"]),
-              int.parse(list[i]["placeId"]),
+          new Task(list[i]["id"],
+              0,//int.parse(list[i]["placeId"]),
               list[i]["name"],
-              int.parse(list[i]["date"]),
-              Cyclic.values[int.parse(list[i]["cyc"])]));
+              0,//int.parse(list[i]["date"]),
+              Cyclic.None,//Cyclic.values[int.parse(list[i]["cyc"])],
+              list[i]["done"] > 0));
     }
     print(employees.length);
     return employees;
@@ -70,7 +70,7 @@ class DatabaseManager{
     var dbClient = await db;
     await dbClient.transaction((txn) async {
       return await txn.rawInsert(
-          'INSERT INTO $_taskTableName(placeId, name, date, cyc ) VALUES(' +
+          'INSERT INTO $_taskTableName(placeId, name, date, cyc, done ) VALUES(' +
               '\'' +
               task.placeId.toString() +
               '\'' +
@@ -85,6 +85,10 @@ class DatabaseManager{
               ',' +
               '\'' +
               task.cyc.toString() +
+              '\'' +
+              ',' +
+              '\'' +
+              (task.done== true ? 1 : 0).toString() +
               '\'' +
               ')');
     });
@@ -113,6 +117,21 @@ class DatabaseManager{
               place.name+
               '\'' +
               ')');
+    });
+  }
+
+  void updateTask(Task task) async {
+    var dbClient = await db;
+    await dbClient.transaction((txn) async {
+      return await txn.rawUpdate(
+          'UPDATE  $_taskTableName SET '
+              'placeId = \'${task.placeId}\', '
+              'name = \'${task.name}\', '
+              'date = \'${task.date}\', '
+              'cyc = \'1\', '
+              'done = \'' +(task.done== true ? 1 : 0).toString() +"\'"
+              " WHERE id = ${task.id}"
+      );
     });
   }
 

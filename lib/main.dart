@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_appk/ListWidget.dart';
+import 'package:flutter_appk/src/App.dart';
 
-void main() => runApp(MyApp());
+void main() => runApp(App());
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
@@ -11,7 +13,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: TodoList(),
     );
   }
 }
